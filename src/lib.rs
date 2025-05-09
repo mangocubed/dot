@@ -1,8 +1,9 @@
 #[cfg(feature = "ssr")]
 use leptos::prelude::{
-    AutoReload, ElementChild, GlobalAttributes, HydrationScripts, IntoMaybeErased, IntoView,
-    LeptosOptions, view,
+    AutoReload, ElementChild, GlobalAttributes, HydrationScripts, IntoMaybeErased, IntoView, LeptosOptions, view,
 };
+
+pub mod icons;
 
 #[cfg(feature = "hydrate")]
 pub fn hydrate_body<IV>(app_fn: fn() -> IV)
@@ -23,7 +24,9 @@ pub mod meta {
 }
 
 pub mod prelude {
-    pub use leptos::prelude::{ElementChild, IntoMaybeErased, IntoView, Signal, component, view};
+    pub use leptos::prelude::{
+        Children, ClassAttribute, CustomAttribute, ElementChild, IntoMaybeErased, IntoView, Signal, component, view,
+    };
 }
 
 pub mod router {
@@ -78,7 +81,5 @@ where
 
     let listener = TcpListener::bind(&addr).await.unwrap();
 
-    axum::serve(listener, app.into_make_service())
-        .await
-        .unwrap();
+    axum::serve(listener, app.into_make_service()).await.unwrap();
 }
