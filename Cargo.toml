@@ -5,19 +5,44 @@ edition = "2024"
 
 [dependencies]
 axum = { version = "0.8.4", optional = true }
+cookie = { version = "0.18.1", features = ["private"], optional = true }
 console_error_panic_hook = { version = "0.1.7", optional = true }
+dotenvy = { version = "0.15.7", optional = true }
+env_logger = { version = "0.11.8", optional = true }
+figment = { version = "0.10.19", features = ["env"], optional = true }
+fluent-templates = "0.13.0"
+fred = { version = "10.1.0", optional = true }
 leptos = "0.8.2"
 leptos_axum = { version = "0.8.2", optional = true }
+leptos-fluent = { version = "0.2.10", features = ["yaml"] }
 leptos_meta = "0.8.2"
 leptos_router = "0.8.2"
+serde = { version = "1.0.219", features = ["derive"] }
+time = { version = "0.3.41", optional = true }
 tokio = { version = "1.45.0", optional = true }
+tower-sessions = { version = "0.14.0", features = ["private"], optional = true }
+tower-sessions-redis-store = { version = "0.16.0", optional = true }
 
 [features]
-hydrate = ["dep:console_error_panic_hook", "leptos/hydrate"]
+hydrate = [
+    "dep:console_error_panic_hook",
+    "leptos/hydrate",
+    "leptos-fluent/hydrate",
+]
 ssr = [
     "dep:axum",
+    "dep:cookie",
+    "dep:dotenvy",
+    "dep:env_logger",
+    "dep:figment",
+    "dep:fred",
     "dep:leptos_axum",
+    "dep:time",
     "dep:tokio",
+    "dep:tower-sessions",
+    "dep:tower-sessions-redis-store",
     "leptos/ssr",
+    "leptos-fluent/axum",
+    "leptos-fluent/ssr",
     "leptos_meta/ssr",
 ]

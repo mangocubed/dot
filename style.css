@@ -1,4 +1,23 @@
+@theme {
+    --radius-field: 0.9rem;
+}
+
 @import "tailwindcss";
 
 @plugin "daisyui";
 @plugin "@tailwindcss/typography";
+
+.input:focus,
+.input:focus-within,
+.textarea:focus,
+.textarea:focus-within {
+    outline: none;
+}
+
+@utility input {
+    @apply border-white;
+}
+
+@utility textarea {
+    @apply border-white;
+}
