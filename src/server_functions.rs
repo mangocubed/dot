@@ -1,9 +1,9 @@
-use crate::prelude::*;
+use leptos::prelude::{ServerFnError, server};
 
-#[cfg(feature = "ssr")]
+#[cfg(feature = "server")]
 const SESSION_KEY_LANGUAGE: &str = "language";
 
-#[cfg(feature = "ssr")]
+#[cfg(feature = "server")]
 async fn extract_session() -> Result<tower_sessions::Session, ServerFnError> {
     Ok(leptos_axum::extract::<tower_sessions::Session>().await?)
 }

@@ -1,26 +1,30 @@
-#[cfg(feature = "ssr")]
-use leptos::prelude::{
-    AutoReload, ElementChild, GlobalAttributes, HydrationScripts, IntoMaybeErased, IntoView, LeptosOptions, view,
-};
+use std::sync::LazyLock;
 
-pub mod components;
+use fluent_templates::{StaticLoader, static_loader};
+use leptos::prelude::{AddAnyAttr, Children, Get, IntoAnyAttribute, IntoMaybeErased, IntoView, component};
+use leptos_fluent::leptos_fluent;
+use leptos_meta::provide_meta_context;
+
+pub mod forms;
 pub mod icons;
 
-#[cfg(feature = "ssr")]
-pub mod ssr;
+#[cfg(feature = "server")]
+pub mod server;
 
 mod server_functions;
 
+use crate::server_functions::{get_language, set_language};
+
 pub mod meta {
-    pub use leptos_meta::{Title, provide_meta_context};
+    pub use leptos_meta::Title;
 }
 
 pub mod prelude {
+    pub use leptos::either::{Either, EitherOf3};
     pub use leptos::prelude::{
-        AddAnyAttr, Children, ClassAttribute, CustomAttribute, ElementChild, Get, IntoAnyAttribute, IntoMaybeErased,
-        IntoView, ServerFnError, Signal, component, server, view,
+        ClassAttribute, ElementChild, IntoMaybeErased, IntoView, ReadSignal, ServerAction, Signal, ViewFn, component,
+        signal, view,
     };
-
     pub use leptos_fluent::{move_tr, tr};
 }
 
@@ -39,88 +43,30 @@ where
     leptos::mount::hydrate_body(app_fn)
 }
 
-#[cfg(feature = "ssr")]
-fn shell_with_app<IV>(options: LeptosOptions, app_fn: fn() -> IV) -> impl IntoView
-where
-    IV: IntoView + 'static,
-{
-    use leptos_meta::{HashedStylesheet, MetaTags};
-
-    view! {
-        <!DOCTYPE html>
-        <html lang="en">
-            <head>
-                <meta charset="utf-8" />
-                <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <AutoReload options=options.clone() />
-                <HydrationScripts options=options.clone() />
-                <MetaTags />
-                <HashedStylesheet id="leptos" options=options />
-            </head>
-            <body>{app_fn()}</body>
-        </html>
-    }
+static_loader! {
+    static DOT_TRANSLATIONS = {
+        locales: "./locales",
+        fallback_language: "en",
+    };
 }
 
-#[cfg(feature = "ssr")]
-pub async fn serve<IV>(leptos_options: LeptosOptions, app_fn: fn() -> IV)
-where
-    IV: IntoView + 'static,
-{
-    use axum::Router;
-    use cookie::{Key, SameSite};
-    use fred::prelude::{ClientLike, Config, Pool};
-    use leptos_axum::{LeptosRoutes, file_and_error_handler, generate_route_list};
-    use time::Duration;
-    use tokio::net::TcpListener;
-    use tower_sessions::{Expiry, SessionManagerLayer};
-    use tower_sessions_redis_store::RedisStore;
+#[component]
+pub fn AppProvider(translations: &'static LazyLock<StaticLoader>, children: Children) -> impl IntoView {
+    provide_meta_context();
 
-    use crate::ssr::config::{SESSION_CONFIG, load_config};
+    leptos_fluent! {
+        #[cfg(debug_assertions)]
+        check_translations: "./src/**/*.rs",
 
-    load_config();
+        languages: "./locales/languages.yaml",
+        locales: "./locales",
+        sync_html_tag_dir: true,
+        sync_html_tag_lang: true,
+        translations: [DOT_TRANSLATIONS, translations],
 
-    let addr = leptos_options.site_addr;
-    let routes = generate_route_list(app_fn);
-    let redis_pool = Pool::new(
-        Config::from_url(&SESSION_CONFIG.redis_url).expect("Could not get Redis URL for session."),
-        None,
-        None,
-        None,
-        10,
-    )
-    .expect("Could not get Redis pool for session.");
+        initial_language_from_server_function: get_language,
+        set_language_to_server_function: set_language,
 
-    let redis_conn = redis_pool.connect();
-    redis_pool
-        .wait_for_connect()
-        .await
-        .expect("Could not get Redis connection for session.");
-
-    let session_store = RedisStore::new(redis_pool);
-    let session_layer = SessionManagerLayer::new(session_store)
-        .with_domain(SESSION_CONFIG.domain.clone())
-        .with_expiry(Expiry::OnInactivity(Duration::days(30)))
-        .with_http_only(true)
-        .with_name(SESSION_CONFIG.name.clone())
-        .with_private(Key::from(SESSION_CONFIG.key.as_bytes()))
-        .with_same_site(SameSite::Strict)
-        .with_secure(SESSION_CONFIG.secure);
-
-    let shell = move |options| shell_with_app(options, app_fn);
-
-    let app = Router::new()
-        .leptos_routes(&leptos_options.clone(), routes, {
-            let leptos_options = leptos_options.clone();
-            move || shell_with_app(leptos_options.clone(), app_fn)
-        })
-        .fallback(file_and_error_handler(shell))
-        .layer(session_layer)
-        .with_state(leptos_options);
-
-    let listener = TcpListener::bind(&addr).await.unwrap();
-
-    axum::serve(listener, app.into_make_service()).await.unwrap();
-
-    redis_conn.await.unwrap().unwrap();
+        children: children(),
+    }
 }
