@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use leptos::either::{Either, EitherOf3};
 use leptos::ev;
 use leptos::prelude::{
-    ActionForm, AddAnyAttr, BindAttribute, Children, ChildrenFn, ClassAttribute, ElementChild, For, Get,
-    GlobalAttributes, IntoAnyAttribute, IntoMaybeErased, IntoView, NodeRef, NodeRefAttribute, OnAttribute, RwSignal,
-    ServerAction, ServerFnError, Signal, Update, ViewFn, component, provide_context, use_context, view,
+    ActionForm, AddAnyAttr, BindAttribute, Callable, Callback, Children, ChildrenFn, ClassAttribute, ElementChild, For,
+    Get, GlobalAttributes, IntoAnyAttribute, IntoMaybeErased, IntoView, NodeRef, NodeRefAttribute, OnAttribute,
+    RwSignal, ServerAction, ServerFnError, Show, Signal, Update, ViewFn, component, provide_context, use_context, view,
 };
 use leptos::server_fn::{Http, ServerFn, client, codec, request};
 use leptos_fluent::move_tr;
@@ -29,17 +29,6 @@ pub struct ActionResponse<T = ()> {
 struct FormContext {
     action_response: Signal<ActionResponse>,
     is_pending: Signal<bool>,
-}
-
-pub struct EventFn(Box<dyn Fn(ev::Event) + Send + Sync + 'static>);
-
-impl<T> From<T> for EventFn
-where
-    T: Fn(ev::Event) + Send + Sync + 'static,
-{
-    fn from(value: T) -> Self {
-        Self(Box::new(value))
-    }
 }
 
 fn error_signal(name: &'static str) -> Signal<Option<String>> {
@@ -99,6 +88,14 @@ where
     });
 
     view! {
+        <Show when=move || action_response.get().success == Some(false)>
+            <div class="py-2 has-[div:empty]:hidden">
+                <div role="alert" class="alert alert-error">
+                    {move || action_response.get().message}
+                </div>
+            </div>
+        </Show>
+
         <ActionForm action=action attr:autocomplete="off" attr:novalidate="true" attr:class="form">
             {children()}
         </ActionForm>
@@ -137,6 +134,7 @@ pub fn PasswordField(
         <FormField error=error id=id label=label>
             <div class="input flex items-center gap-2 pr-0 w-full" class:input-error=move || error.get().is_some()>
                 <input node_ref=node_ref class="grow" id=id name=name type=input_type />
+
                 <button class="btn btn-ghost btn-sm" type="button" on:click=toggle_type>
                     {move || {
                         if input_type.get() == "password" {
@@ -207,7 +205,7 @@ pub fn TextField(
     #[prop(default = "text", into)] input_type: &'static str,
     #[prop(into, optional)] label: ViewFn,
     #[prop(into)] name: &'static str,
-    #[prop(into, optional)] on_input: Option<EventFn>,
+    #[prop(into, optional)] on_input: Option<Callback<ev::Event>>,
     #[prop(into, optional)] value: RwSignal<String>,
 ) -> impl IntoView {
     let error = error_signal(name);
@@ -228,8 +226,8 @@ pub fn TextField(
                 name=name
                 node_ref=node_ref
                 on:input=move |event| {
-                    if let Some(on_input) = on_input.as_ref() {
-                        on_input.0(event);
+                    if let Some(on_input) = on_input {
+                        on_input.run(event);
                     }
                 }
                 type=input_type
