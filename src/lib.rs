@@ -22,8 +22,8 @@ pub mod meta {
 pub mod prelude {
     pub use leptos::either::{Either, EitherOf3};
     pub use leptos::prelude::{
-        ClassAttribute, ElementChild, IntoMaybeErased, IntoView, ReadSignal, ServerAction, Signal, ViewFn, component,
-        signal, view,
+        ClassAttribute, ElementChild, IntoMaybeErased, IntoView, ReadSignal, ServerAction, ServerFnError, Signal,
+        ViewFn, component, server, signal, view,
     };
     pub use leptos_fluent::{move_tr, tr};
 }

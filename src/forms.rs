@@ -1,50 +1,54 @@
-use std::collections::HashMap;
-
 use leptos::either::{Either, EitherOf3};
 use leptos::ev;
 use leptos::prelude::{
     ActionForm, AddAnyAttr, BindAttribute, Callable, Callback, Children, ChildrenFn, ClassAttribute, ElementChild, For,
     Get, GlobalAttributes, IntoAnyAttribute, IntoMaybeErased, IntoView, NodeRef, NodeRefAttribute, OnAttribute,
-    RwSignal, ServerAction, ServerFnError, Show, Signal, Update, ViewFn, component, provide_context, use_context, view,
+    RwSignal, ServerAction, ServerFnError, Signal, Update, ViewFn, component, provide_context, use_context, view,
 };
 use leptos::server_fn::{Http, ServerFn, client, codec, request};
 use leptos_fluent::move_tr;
 use leptos_use::use_event_listener;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use validator::ValidationErrors;
 
 use crate::icons::{EyeMini, EyeSlashMini};
 
 const KEY_CODE_ENTER: u32 = 13;
 
-#[derive(Clone, Default, Deserialize, Serialize)]
-pub struct ActionResponse<T = ()> {
-    pub success: Option<bool>,
-    pub errors: Option<HashMap<String, String>>,
-    pub data: Option<T>,
-    pub message: Option<String>,
+#[derive(Clone, Default, Deserialize, PartialEq, Serialize)]
+pub enum ActionResponse {
+    #[default]
+    Nothing,
+    Pending,
+    Success(String),
+    Error(String, ValidationErrors),
 }
 
-#[derive(Clone)]
-struct FormContext {
-    action_response: Signal<ActionResponse>,
-    is_pending: Signal<bool>,
+impl ActionResponse {
+    fn is_pending(&self) -> bool {
+        *self == ActionResponse::Pending
+    }
 }
 
-fn error_signal(name: &'static str) -> Signal<Option<String>> {
-    let form_context = use_form_context();
+fn use_error_signal(id: &'static str) -> Signal<Option<String>> {
+    let action_response = use_action_response();
 
     Signal::derive(move || {
-        form_context
-            .action_response
-            .get()
-            .errors
-            .and_then(|errors| errors.get(name).cloned())
+        if let ActionResponse::Error(_, errors) = action_response.get() {
+            errors.field_errors().get(id).and_then(|errors| {
+                errors
+                    .iter()
+                    .find_map(|error| error.message.as_ref().map(|message| message.to_string()))
+            })
+        } else {
+            None
+        }
     })
 }
 
-fn use_form_context() -> FormContext {
-    use_context().expect("Could not get form context")
+fn use_action_response() -> Signal<ActionResponse> {
+    use_context().expect("Could not get action response")
 }
 
 #[component]
@@ -80,23 +84,34 @@ where
     <ServFn as ServerFn>::Client: client::Client<ServerFnError>,
 {
     let action_value = action.value();
-    let action_response = Signal::derive(move || action_value.get().and_then(|result| result.ok()).unwrap_or_default());
-
-    provide_context(FormContext {
-        action_response,
-        is_pending: action.pending().into(),
+    let action_response = Signal::derive(move || {
+        if action.pending().get() {
+            ActionResponse::Pending
+        } else {
+            action_value.get().and_then(|result| result.ok()).unwrap_or_default()
+        }
     });
 
-    view! {
-        <Show when=move || action_response.get().success == Some(false)>
-            <div class="py-2 has-[div:empty]:hidden">
-                <div role="alert" class="alert alert-error">
-                    {move || action_response.get().message}
-                </div>
-            </div>
-        </Show>
+    provide_context(action_response);
 
+    view! {
         <ActionForm action=action attr:autocomplete="off" attr:novalidate="true" attr:class="form">
+            {move || {
+                if let ActionResponse::Error(message, _) = action_response.get() {
+                    Either::Left(
+                        view! {
+                            <div class="py-2 has-[div:empty]:hidden">
+                                <div role="alert" class="alert alert-error">
+                                    {message}
+                                </div>
+                            </div>
+                        },
+                    )
+                } else {
+                    Either::Right(())
+                }
+            }}
+
             {children()}
         </ActionForm>
     }
@@ -108,7 +123,7 @@ pub fn PasswordField(
     #[prop(into, optional)] label: ViewFn,
     #[prop(into)] name: &'static str,
 ) -> impl IntoView {
-    let error = error_signal(name);
+    let error = use_error_signal(id);
     let node_ref = NodeRef::new();
     let input_type = RwSignal::new("password".to_owned());
 
@@ -157,7 +172,7 @@ pub fn SelectField(
     #[prop(into, optional)] options: Signal<Vec<(String, String)>>,
     #[prop(into, optional)] value: Signal<String>,
 ) -> impl IntoView {
-    let error = error_signal(name);
+    let error = use_error_signal(id);
 
     view! {
         <FormField error=error id=id label=label>
@@ -174,19 +189,19 @@ pub fn SelectField(
 
 #[component]
 pub fn SubmitButton(#[prop(optional)] children: Option<ChildrenFn>) -> impl IntoView {
-    let form_context = use_form_context();
+    let action_response = use_action_response();
 
     let on_click = move |event: ev::MouseEvent| {
-        if form_context.is_pending.get() {
+        if action_response.get().is_pending() {
             event.prevent_default();
         }
     };
 
     view! {
-        <div class="py-2 w-full">
+        <div class="py-3 w-full">
             <button class="btn btn-block btn-primary" on:click=on_click type="submit">
                 {move || {
-                    if form_context.is_pending.get() {
+                    if action_response.get().is_pending() {
                         EitherOf3::A(view! { <span class="loading loading-spinner" /> })
                     } else if let Some(children) = &children {
                         EitherOf3::B(children())
@@ -208,7 +223,7 @@ pub fn TextField(
     #[prop(into, optional)] on_input: Option<Callback<ev::Event>>,
     #[prop(into, optional)] value: RwSignal<String>,
 ) -> impl IntoView {
-    let error = error_signal(name);
+    let error = use_error_signal(id);
     let node_ref = NodeRef::new();
 
     let _ = use_event_listener(node_ref, ev::keydown, |event| {
