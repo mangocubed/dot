@@ -8,10 +8,24 @@
 @plugin "daisyui";
 @plugin "@tailwindcss/typography";
 
+@source inline("absolute");
 @source inline("alert{-error,}");
-@source inline("btn{-block,-ghost,-primary,-sm,}");
+@source inline("btn{-block,-circle,-ghost,-primary,-sm,}");
 @source inline("fieldset{-label,}");
-@source inline("py-3");
+@source inline("flex");
+@source inline("gap-2");
+@source inline("grow");
+@source inline("hidden");
+@source inline("input{-error,}");
+@source inline("item-center");
+@source inline("loading{-spinner,}");
+@source inline("modal{-action,-backdrop,-box,-open,}");
+@source inline("py-{2,3}");
+@source inline("pr-0");
+@source inline("right-2");
+@source inline("size-5");
+@source inline("select{-error,}");
+@source inline("top-2");
 @source inline("w-full");
 
 .input:focus,
@@ -25,8 +39,16 @@
     @apply uppercase;
 }
 
+@utility fieldset {
+    @apply w-full;
+}
+
 @utility input {
-    @apply border-white;
+    @apply border-white w-full;
+}
+
+@utility select {
+    @apply border-white w-full;
 }
 
 @utility textarea {

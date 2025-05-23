@@ -3,7 +3,7 @@ use leptos::ev;
 use leptos::prelude::{
     ActionForm, AddAnyAttr, BindAttribute, Callable, Callback, Children, ChildrenFn, ClassAttribute, ElementChild, For,
     Get, GlobalAttributes, IntoAnyAttribute, IntoMaybeErased, IntoView, NodeRef, NodeRefAttribute, OnAttribute,
-    RwSignal, ServerAction, ServerFnError, Signal, Update, ViewFn, component, provide_context, use_context, view,
+    RwSignal, ServerAction, ServerFnError, Set, Signal, Update, ViewFn, component, provide_context, use_context, view,
 };
 use leptos::server_fn::{Http, ServerFn, client, codec, request};
 use leptos_fluent::move_tr;
@@ -12,6 +12,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use validator::ValidationErrors;
 
+use crate::components::Modal;
 use crate::icons::{EyeMini, EyeSlashMini};
 
 const KEY_CODE_ENTER: u32 = 13;
@@ -59,7 +60,7 @@ pub fn FormField(
     #[prop(into)] label: ViewFn,
 ) -> impl IntoView {
     view! {
-        <fieldset class="fieldset w-full">
+        <fieldset class="fieldset">
             <label class="fieldset-label empty:hidden" for=id>
                 {label.run()}
             </label>
@@ -72,7 +73,11 @@ pub fn FormField(
 }
 
 #[component]
-pub fn FormProvider<ServFn, OutputProtocol>(action: ServerAction<ServFn>, children: Children) -> impl IntoView
+pub fn FormProvider<ServFn, OutputProtocol>(
+    action: ServerAction<ServFn>,
+    #[prop(into, optional)] on_success: Option<Callback<()>>,
+    children: Children,
+) -> impl IntoView
 where
     ServFn: DeserializeOwned
         + Clone
@@ -97,18 +102,44 @@ where
     view! {
         <ActionForm action=action attr:autocomplete="off" attr:novalidate="true" attr:class="form">
             {move || {
-                if let ActionResponse::Error(message, _) = action_response.get() {
-                    Either::Left(
-                        view! {
-                            <div class="py-2 has-[div:empty]:hidden">
-                                <div role="alert" class="alert alert-error">
+                match action_response.get() {
+                    ActionResponse::Success(message) => {
+                        let is_open = RwSignal::new(true);
+                        EitherOf3::A(
+                            view! {
+                                <Modal is_open=is_open is_closable=false>
                                     {message}
+
+                                    <div class="modal-action">
+                                        <button
+                                            class="btn btn-primary"
+                                            on:click=move |event| {
+                                                event.prevent_default();
+                                                is_open.set(false);
+                                                if let Some(os) = on_success {
+                                                    os.run(())
+                                                }
+                                            }
+                                        >
+                                            "Ok"
+                                        </button>
+                                    </div>
+                                </Modal>
+                            },
+                        )
+                    }
+                    ActionResponse::Error(message, _) => {
+                        EitherOf3::B(
+                            view! {
+                                <div class="py-2 has-[div:empty]:hidden">
+                                    <div role="alert" class="alert alert-error">
+                                        {message}
+                                    </div>
                                 </div>
-                            </div>
-                        },
-                    )
-                } else {
-                    Either::Right(())
+                            },
+                        )
+                    }
+                    _ => EitherOf3::C(()),
                 }
             }}
 
@@ -147,7 +178,7 @@ pub fn PasswordField(
 
     view! {
         <FormField error=error id=id label=label>
-            <div class="input flex items-center gap-2 pr-0 w-full" class:input-error=move || error.get().is_some()>
+            <div class="input flex items-center gap-2 pr-0" class:input-error=move || error.get().is_some()>
                 <input node_ref=node_ref class="grow" id=id name=name type=input_type />
 
                 <button class="btn btn-ghost btn-sm" type="button" on:click=toggle_type>
@@ -176,7 +207,7 @@ pub fn SelectField(
 
     view! {
         <FormField error=error id=id label=label>
-            <select class="select w-full" class:select-error=move || error.get().is_some() id=id name=name>
+            <select class="select" class:select-error=move || error.get().is_some() id=id name=name>
                 <For each=move || options.get() key=move |data| data.1.clone() let:data>
                     <option value=data.1.clone() selected=move || value.get() == data.1>
                         {data.0}
@@ -235,7 +266,7 @@ pub fn TextField(
     view! {
         <FormField error=error id=id label=label>
             <input
-                class="input w-full"
+                class="input"
                 class:input-error=move || error.get().is_some()
                 id=id
                 name=name

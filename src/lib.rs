@@ -5,6 +5,7 @@ use leptos::prelude::{AddAnyAttr, Children, Get, IntoAnyAttribute, IntoMaybeEras
 use leptos_fluent::leptos_fluent;
 use leptos_meta::provide_meta_context;
 
+pub mod components;
 pub mod forms;
 pub mod icons;
 
@@ -31,6 +32,7 @@ pub mod prelude {
 pub mod router {
     pub use leptos_router::StaticSegment;
     pub use leptos_router::components::{Route, Router, Routes};
+    pub use leptos_router::hooks::use_navigate;
 }
 
 #[cfg(feature = "hydrate")]
