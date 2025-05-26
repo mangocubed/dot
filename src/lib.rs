@@ -23,15 +23,16 @@ pub mod meta {
 pub mod prelude {
     pub use leptos::either::{Either, EitherOf3};
     pub use leptos::prelude::{
-        ClassAttribute, ElementChild, IntoMaybeErased, IntoView, ReadSignal, ServerAction, ServerFnError, Signal,
-        ViewFn, component, server, signal, view,
+        Children, ChildrenFn, ClassAttribute, ElementChild, Get, IntoMaybeErased, IntoView, OnAttribute, ReadSignal,
+        Resource, RwSignal, ServerAction, ServerFnError, Set, Signal, StoredValue, Suspend, Transition, ViewFn,
+        component, server, signal, view,
     };
     pub use leptos_fluent::{move_tr, tr};
 }
 
 pub mod router {
     pub use leptos_router::StaticSegment;
-    pub use leptos_router::components::{Route, Router, Routes};
+    pub use leptos_router::components::{Redirect, Route, Router, Routes};
     pub use leptos_router::hooks::use_navigate;
 }
 

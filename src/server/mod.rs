@@ -6,6 +6,8 @@ use unic_langid::{LanguageIdentifier, langid};
 
 pub mod config;
 
+pub use leptos_axum::redirect;
+
 pub const SESSION_KEY_LANGUAGE: &str = "language";
 
 pub async fn extract_language() -> Result<LanguageIdentifier, ServerFnError> {
