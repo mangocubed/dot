@@ -12,8 +12,8 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use validator::ValidationErrors;
 
-use crate::components::Modal;
-use crate::icons::{EyeMini, EyeSlashMini};
+use super::components::Modal;
+use super::icons::{EyeMini, EyeSlashMini};
 
 const KEY_CODE_ENTER: u32 = 13;
 
@@ -22,7 +22,7 @@ pub enum ActionResponse {
     #[default]
     Nothing,
     Pending,
-    Success(String),
+    Success(String, Option<String>),
     Error(String, ValidationErrors),
 }
 
@@ -75,7 +75,7 @@ pub fn FormField(
 #[component]
 pub fn FormProvider<ServFn, OutputProtocol>(
     action: ServerAction<ServFn>,
-    #[prop(into, optional)] on_success: Option<Callback<()>>,
+    #[prop(into, optional)] on_success: Option<Callback<(Option<String>,)>>,
     children: Children,
 ) -> impl IntoView
 where
@@ -103,7 +103,7 @@ where
         <ActionForm action=action attr:autocomplete="off" attr:novalidate="true" attr:class="form">
             {move || {
                 match action_response.get() {
-                    ActionResponse::Success(message) => {
+                    ActionResponse::Success(message, data) => {
                         let is_open = RwSignal::new(true);
                         EitherOf3::A(
                             view! {
@@ -117,7 +117,7 @@ where
                                                 event.prevent_default();
                                                 is_open.set(false);
                                                 if let Some(os) = on_success {
-                                                    os.run(())
+                                                    os.run((data.clone(),))
                                                 }
                                             }
                                         >

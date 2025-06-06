@@ -15,7 +15,7 @@ fluent-templates = "0.13.0"
 fred = { version = "10.1.0", optional = true }
 leptos = "0.8.2"
 leptos_axum = { version = "0.8.2", optional = true }
-leptos-fluent = { version = "0.2.10", features = ["yaml"] }
+leptos-fluent = { version = "0.2.12", features = ["yaml"] }
 leptos_meta = "0.8.2"
 leptos_router = "0.8.2"
 leptos-use = "0.16.0-beta2"

@@ -1,7 +1,7 @@
 use leptos::prelude::{ServerFnError, server};
 
 #[cfg(feature = "server")]
-use crate::server::{SESSION_KEY_LANGUAGE, extract_language, extract_session};
+use super::{SESSION_KEY_LANGUAGE, extract_language, extract_session};
 
 #[server]
 pub async fn get_language() -> Result<Option<String>, ServerFnError> {
