@@ -1,5 +1,7 @@
 #[cfg(feature = "server")]
 pub mod config;
+#[cfg(feature = "server")]
+pub mod pagination;
 
 #[cfg(feature = "server")]
 mod constants {
