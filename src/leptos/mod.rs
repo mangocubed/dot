@@ -5,15 +5,16 @@ use leptos_fluent::leptos_fluent;
 use leptos_meta::provide_meta_context;
 
 pub use leptos::either::{Either, EitherOf3};
-pub use leptos::ev::MouseEvent;
+pub use leptos::ev::{self, Event, MouseEvent};
 pub use leptos::prelude::{
-    AddAnyAttr, Children, ChildrenFn, ClassAttribute, Effect, ElementChild, Get, GlobalAttributes, IntoAnyAttribute,
-    IntoMaybeErased, IntoView, OnAttribute, ReadSignal, ReadValue, Resource, RwSignal, ServerAction, ServerFnError,
-    Set, SharedValue, Signal, StoredValue, StyleAttribute, Suspend, Suspense, Transition, ViewFn, With, WithValue,
-    component, provide_context, server, signal, use_context, view,
+    AddAnyAttr, Children, ChildrenFn, ClassAttribute, CustomAttribute, Effect, ElementChild, Get, GlobalAttributes,
+    IntoAnyAttribute, IntoMaybeErased, IntoView, LocalResource, NodeRef, NodeRefAttribute, OnAttribute, ReadSignal,
+    ReadValue, Resource, RwSignal, ServerAction, ServerFnError, Set, SharedValue, Show, Signal, StoredValue,
+    StyleAttribute, Suspend, Suspense, Transition, ViewFn, With, WithValue, component, provide_context, server, signal,
+    use_context, view,
 };
 pub use leptos_fluent::{expect_i18n, move_tr, tr, use_i18n};
-pub use leptos_meta::Title;
+pub use leptos_meta::{Meta, Title};
 pub use leptos_router::StaticSegment;
 pub use leptos_router::components::{Redirect, Route, Router, Routes};
 pub use leptos_router::hooks::{use_location, use_navigate, use_query_map};
@@ -142,7 +143,10 @@ where
         <html lang="en">
             <head>
                 <meta charset="utf-8" />
-                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <meta
+                    name="viewport"
+                    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+                />
                 <AutoReload options=options.clone() />
                 <HydrationScripts options=options.clone() />
                 <MetaTags />
