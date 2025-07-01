@@ -1,4 +1,4 @@
-use leptos::prelude::{ClassAttribute, CustomAttribute, ElementChild, IntoMaybeErased, IntoView, component, view};
+use leptos::prelude::*;
 
 #[component]
 pub fn ArrowRightEndOnRectangleOutline() -> impl IntoView {

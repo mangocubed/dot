@@ -1,23 +1,27 @@
+#[cfg(feature = "server")]
 use std::future::Future;
 
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+#[derive(Clone, Deserialize, Serialize)]
 pub struct CursorPage<T> {
     pub end_cursor: Option<Uuid>,
-    pub nodes: Vec<T>,
     pub has_next_page: bool,
+    pub nodes: Vec<T>,
 }
 
 impl<T> Default for CursorPage<T> {
     fn default() -> Self {
         Self {
             end_cursor: None,
-            nodes: vec![],
             has_next_page: false,
+            nodes: Vec::new(),
         }
     }
 }
 
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct CursorPageParams {
     pub after: Option<Uuid>,
     pub first: u8,
@@ -29,6 +33,13 @@ impl Default for CursorPageParams {
     }
 }
 
+impl CursorPageParams {
+    pub fn new(after: Option<Uuid>, first: u8) -> Self {
+        Self { after, first }
+    }
+}
+
+#[cfg(feature = "server")]
 impl<T> CursorPage<T> {
     pub async fn new<CT, CF, RT, RF, QF>(
         cursor_page_params: &CursorPageParams,

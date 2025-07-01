@@ -1,21 +1,14 @@
 use leptos::either::{Either, EitherOf3};
 use leptos::ev;
-use leptos::prelude::{
-    ActionForm, AddAnyAttr, BindAttribute, Callable, Callback, Children, ChildrenFn, ClassAttribute, ElementChild, For,
-    Get, GlobalAttributes, IntoAnyAttribute, IntoMaybeErased, IntoView, NodeRef, NodeRefAttribute, OnAttribute,
-    RwSignal, ServerAction, ServerFnError, Set, Signal, Update, ViewFn, component, provide_context, use_context, view,
-};
+use leptos::prelude::*;
 use leptos::server_fn::{Http, ServerFn, client, codec, request};
 use leptos_fluent::move_tr;
-use leptos_use::use_event_listener;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use validator::ValidationErrors;
 
 use super::components::Modal;
 use super::icons::{EyeMini, EyeSlashMini};
-
-const KEY_CODE_ENTER: u32 = 13;
 
 #[derive(Clone, Default, Deserialize, PartialEq, Serialize)]
 pub enum ActionResponse {
@@ -155,14 +148,7 @@ pub fn PasswordField(
     #[prop(into)] name: &'static str,
 ) -> impl IntoView {
     let error = use_error_signal(id);
-    let node_ref = NodeRef::new();
     let input_type = RwSignal::new("password".to_owned());
-
-    let _ = use_event_listener(node_ref, ev::keydown, |event| {
-        if event.key_code() == KEY_CODE_ENTER {
-            event.prevent_default();
-        }
-    });
 
     let toggle_type = move |event: ev::MouseEvent| {
         event.prevent_default();
@@ -179,7 +165,15 @@ pub fn PasswordField(
     view! {
         <FormField error=error id=id label=label>
             <div class="input flex items-center gap-2 pr-0" class:input-error=move || error.get().is_some()>
-                <input node_ref=node_ref class="grow" id=id name=name type=input_type />
+                <input
+                    class="grow"
+                    id=id
+                    name=name
+                    type=input_type
+                    on:keydown=move |event| {
+                        event.prevent_default();
+                    }
+                />
 
                 <button class="btn btn-ghost btn-sm" type="button" on:click=toggle_type>
                     {move || {
@@ -255,13 +249,6 @@ pub fn TextField(
     #[prop(into, optional)] value: RwSignal<String>,
 ) -> impl IntoView {
     let error = use_error_signal(id);
-    let node_ref = NodeRef::new();
-
-    let _ = use_event_listener(node_ref, ev::keydown, |event| {
-        if event.key_code() == KEY_CODE_ENTER {
-            event.prevent_default();
-        }
-    });
 
     view! {
         <FormField error=error id=id label=label>
@@ -270,7 +257,9 @@ pub fn TextField(
                 class:input-error=move || error.get().is_some()
                 id=id
                 name=name
-                node_ref=node_ref
+                on:keydown=move |event| {
+                    event.prevent_default();
+                }
                 on:input=move |event| {
                     if let Some(on_input) = on_input {
                         on_input.run(event);

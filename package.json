@@ -2,11 +2,13 @@
     "name": "dot",
     "version": "0.0.0-alpha.0",
     "style": "style.css",
-    "files": ["style.css"],
+    "files": [
+        "style.css"
+    ],
     "dependencies": {
         "@tailwindcss/typography": "^0.5.16",
         "daisyui": "^5.0.35",
-        "tailwindcss": "^4.1.7"
+        "tailwindcss": "^4.1.11"
     },
     "devDependencies": {
         "@types/node": "^22.15.14"

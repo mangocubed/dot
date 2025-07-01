@@ -1,6 +1,5 @@
 @theme {
     --color-primary: #fc7753;
-    --radius-field: 0.9rem;
 }
 
 @import "tailwindcss";
@@ -56,15 +55,15 @@
 }
 
 @utility input {
-    @apply border-white w-full;
+    @apply border-white w-full rounded-2xl;
 }
 
 @utility select {
-    @apply border-white w-full;
+    @apply border-white w-full rounded-2xl;
 }
 
 @utility textarea {
-    @apply border-white;
+    @apply border-white w-full rounded-2xl;
 }
 
 @layer components {
