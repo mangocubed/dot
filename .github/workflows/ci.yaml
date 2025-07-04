@@ -1,0 +1,40 @@
+name: CI
+
+on:
+    push:
+        branches: [main]
+        paths-ignore:
+            - "*.md"
+            - LICENSE
+    pull_request:
+        branches: [main]
+        paths-ignore:
+            - "*.md"
+            - LICENSE
+            
+jobs:
+    code_analysis:
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: actions/checkout@v4
+            - uses: ./.github/actions/setup-rust
+            - name: Check with cargo-fmt
+              run: cargo fmt --all --check
+            - name: Check with leptosfmt
+              run: |
+                  cargo install --force leptosfmt
+                  leptosfmt --check .
+            - name: Check with cargo-clippy
+              run: cargo clippy -- -D warnings
+              
+    builds:
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: actions/checkout@v4
+            - uses: ./.github/actions/setup-rust
+            
+    tests:
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: actions/checkout@v4
+            - uses: ./.github/actions/setup-rust        
