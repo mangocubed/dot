@@ -1,11 +1,19 @@
-@theme {
+@import "tailwindcss";
+
+@plugin "@tailwindcss/typography";
+@plugin "daisyui";
+
+@plugin "daisyui/theme" {
+    name: "dark";
+
     --color-primary: #fc7753;
 }
 
-@import "tailwindcss";
+@plugin "daisyui/theme" {
+    name: "light";
 
-@plugin "daisyui";
-@plugin "@tailwindcss/typography";
+    --color-primary: #fc7753;
+}
 
 @source inline("absolute");
 @source inline("alert{-error,}");
@@ -47,7 +55,7 @@
 }
 
 @utility btn {
-    @apply uppercase;
+    @apply uppercase rounded-2xl;
 }
 
 @utility fieldset {
